@@ -81,10 +81,18 @@ while True :
         lock_length = math.hypot(x2L-x1L, y2L-y1L)
         #cv2.circle(img, (x1L, y1L), 10, (255, 0, 0), cv2.FILLED)
 
-        print(lock_length)
+        #closure
+        x1C, y1C = int(lmlist[10][1]), int(lmlist[10][2])
+        close_length = math.hypot(x1 - x1C, y1 - y1C)
+        #print(close_length)
+
+        if close_length < 25 :
+            break
+
+        #print(lock_length)
         if lock_length < 100 :
             locked = True
-            print(locked)
+            #print(locked)
         else :
             locked  = False
 
@@ -114,3 +122,6 @@ while True :
     ch = cv2.waitKey(1)
     if ch == 27 or ch == ord('q') or ch == ord('Q'):
         break
+
+cap.release()
+cv2.destroyAllWindows()
