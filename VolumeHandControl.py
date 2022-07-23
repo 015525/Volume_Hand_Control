@@ -28,6 +28,10 @@ volume = cast(interface, POINTER(IAudioEndpointVolume))
 vol_range = volume.GetVolumeRange()
 volume.SetMasterVolumeLevel(-5.0, None)
 vol_min, vol_max = vol_range[0], vol_range[1]
+locked = True
+
+rec_val = 295
+vol_per = 0
 
 while True :
     success, img= cap.read()
@@ -36,8 +40,6 @@ while True :
 
     if len(lmlist) > 8 :
         #print(lmlist[4], lmlist[8])
-
-        #x1,y1 =
 
         x1, x2 = int(lmlist[4][1]), int(lmlist[8][1])
         y1, y2 = int(lmlist[4][2]), int(lmlist[8][2])
@@ -72,22 +74,36 @@ while True :
         '''
 
 
-        # another way to get the range
-        rec_val = np.interp(length, [50,250], [295, 95])
-        '''
-        rec_val = 295 - ((length/250) * (295-95))
-        if rec_val<95 :
-            rec_val = 95
-        print(rec_val)
-        '''
 
+        #lockers
+        x1L, y1L = int(lmlist[16][1]), int(lmlist[16][2])
+        x2L, y2L = int(lmlist[0][1]), int(lmlist[0][2])
+        lock_length = math.hypot(x2L-x1L, y2L-y1L)
+        #cv2.circle(img, (x1L, y1L), 10, (255, 0, 0), cv2.FILLED)
 
-        cv2.rectangle(img, (20,300), (60, 90), (255,0,255), 3)
-        cv2.rectangle(img, (25, 295), (55, int(rec_val)), (255, 0, 255), cv2.FILLED)
-        volume.SetMasterVolumeLevel(vol_val, None)
+        print(lock_length)
+        if lock_length < 100 :
+            locked = True
+            print(locked)
+        else :
+            locked  = False
 
-        vol_per = np.interp(length, [50,250], [0, 100])
-        cv2.putText(img, f'{int(vol_per)} %', (10, 350), cv2.FONT_HERSHEY_PLAIN, 2 , (255, 0, 0), 3)
+        if not locked :
+            # another way to get the range
+            rec_val = np.interp(length, [50, 250], [295, 95])
+            '''
+            rec_val = 295 - ((length/250) * (295-95))
+            if rec_val<95 :
+                rec_val = 95
+            print(rec_val)
+            '''
+            volume.SetMasterVolumeLevel(vol_val, None)
+            vol_per = np.interp(length, [50,250], [0, 100])
+            #print(str(vol_val)+" "+str(vol_min)+" "+ str(vol_max))
+            #vol_per = 100 - ((vol_val/vol_min) * 100)
+            cv2.rectangle(img, (20, 300), (60, 90), (255, 0, 255), 3)
+            cv2.rectangle(img, (25, 295), (55,  int(rec_val)), (255, 0, 255), cv2.FILLED)
+            cv2.putText(img, f'{int(vol_per)} %', (10, 350), cv2.FONT_HERSHEY_PLAIN, 2 , (255, 0, 0), 3)
 
     cTime = time.time()
     fps = 1/(cTime-pTime)
@@ -95,4 +111,6 @@ while True :
 
     cv2.putText(img, f'FPS : {int(fps)}', (10,50), cv2.FONT_HERSHEY_PLAIN, 3, (255,0,0),3)
     cv2.imshow("Image",img)
-    cv2.waitKey(1)
+    ch = cv2.waitKey(1)
+    if ch == 27 or ch == ord('q') or ch == ord('Q'):
+        break
